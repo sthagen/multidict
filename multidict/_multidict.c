@@ -135,28 +135,40 @@ _multidict_append_items_seq(MultiDictObject *self, PyObject *arg,
     }
 
     while ((item = PyIter_Next(iter)) != NULL) {
-        if (PyObject_Length(item) != 2) {
-            PyErr_Format(
-                PyExc_TypeError,
-                "%s takes either dict or list of (key, value) tuples",
-                name,
-                NULL
-            );
-            Py_DECREF(item);
-            Py_DECREF(iter);
-            return -1;
+        if (PyTuple_CheckExact(item)) {
+            if (PyTuple_GET_SIZE(item) != 2) {
+                goto invalid_type;
+            }
+            key = PyTuple_GET_ITEM(item, 0);
+            Py_INCREF(key);
+            value = PyTuple_GET_ITEM(item, 1);
+            Py_INCREF(value);
         }
-
-        key   = PyTuple_GET_ITEM(item, 0);
-        value = PyTuple_GET_ITEM(item, 1);
+        else if (PyList_CheckExact(item)) {
+            if (PyList_GET_SIZE(item) != 2) {
+                goto invalid_type;
+            }
+            key = PyList_GET_ITEM(item, 0);
+            Py_INCREF(key);
+            value = PyList_GET_ITEM(item, 1);
+            Py_INCREF(value);
+        }
+        else if (PySequence_Check(item)) {
+            if (PySequence_Size(item) != 2) {
+                goto invalid_type;
+            }
+            key = PySequence_GetItem(item, 0);
+            value = PySequence_GetItem(item, 1);
+        } else {
+            goto invalid_type;
+        }
 
         if (pair_list_add(&self->pairs, key, value) < 0) {
-            Py_DECREF(item);
-            Py_DECREF(iter);
-            return -1;
+            goto fail;
         }
-
-        Py_DECREF(item);
+        Py_CLEAR(key);
+        Py_CLEAR(value);
+        Py_CLEAR(item);
     }
 
     Py_DECREF(iter);
@@ -166,6 +178,20 @@ _multidict_append_items_seq(MultiDictObject *self, PyObject *arg,
     }
 
     return 0;
+invalid_type:
+    PyErr_Format(
+        PyExc_TypeError,
+        "%s takes either dict or list of (key, value) pairs",
+        name,
+        NULL
+    );
+    goto fail;
+fail:
+    Py_XDECREF(key);
+    Py_XDECREF(value);
+    Py_XDECREF(item);
+    Py_DECREF(iter);
+    return -1;
 }
 
 static int
@@ -360,6 +386,29 @@ fail:
 
     Py_DECREF(new_multidict);
 
+    return NULL;
+}
+
+static inline PyObject *
+_multidict_proxy_copy(MultiDictProxyObject *self, PyTypeObject *type)
+{
+    PyObject *new_multidict = PyType_GenericNew(type, NULL, NULL);
+    if (new_multidict == NULL) {
+        goto fail;
+    }
+    if (type->tp_init(new_multidict, NULL, NULL) < 0) {
+        goto fail;
+    }
+    if (_multidict_extend_with_args(
+        (MultiDictObject*)new_multidict, (PyObject*)self, NULL, "copy", 1) < 0)
+    {
+        goto fail;
+    }
+
+    return new_multidict;
+
+fail:
+    Py_XDECREF(new_multidict);
     return NULL;
 }
 
@@ -639,12 +688,15 @@ multidict_tp_init(MultiDictObject *self, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
-multidict_add(MultiDictObject *self, PyObject *args)
+multidict_add(MultiDictObject *self, PyObject *args, PyObject *kwds)
 {
     PyObject *key = NULL,
              *val = NULL;
 
-    if (!PyArg_UnpackTuple(args, "set", 2, 2, &key, &val)) {
+    static char *kwlist[] = {"key", "value", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO:add",
+                                     kwlist, &key, &val))
+    {
         return NULL;
     }
 
@@ -857,7 +909,7 @@ static PyMethodDef multidict_methods[] = {
     {
         "add",
         (PyCFunction)multidict_add,
-        METH_VARARGS,
+        METH_VARARGS | METH_KEYWORDS,
         multidict_add_doc
     },
     {
@@ -1004,7 +1056,7 @@ static PyTypeObject cimultidict_type = {
     "multidict._multidict.CIMultiDict",              /* tp_name */
     sizeof(MultiDictObject),                         /* tp_basicsize */
     .tp_dealloc = (destructor)multidict_tp_dealloc,
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,
     .tp_doc = CIMultDict_doc,
     .tp_traverse = (traverseproc)multidict_tp_traverse,
     .tp_clear = (inquiry)multidict_tp_clear,
@@ -1103,24 +1155,7 @@ multidict_proxy_values(MultiDictProxyObject *self)
 static PyObject *
 multidict_proxy_copy(MultiDictProxyObject *self)
 {
-    PyObject *new_multidict = PyType_GenericNew(&multidict_type, NULL, NULL);
-    if (new_multidict == NULL) {
-        goto fail;
-    }
-    if (multidict_tp_init((MultiDictObject*)new_multidict, NULL, NULL) < 0) {
-        goto fail;
-    }
-    if (_multidict_extend_with_args(
-        (MultiDictObject*)new_multidict, (PyObject*)self, NULL, "copy", 1) < 0)
-    {
-        goto fail;
-    }
-
-    return new_multidict;
-
-fail:
-    Py_XDECREF(new_multidict);
-    return NULL;
+    return _multidict_proxy_copy(self, &multidict_type);
 }
 
 static PyObject *
@@ -1329,23 +1364,44 @@ cimultidict_proxy_tp_init(MultiDictProxyObject *self, PyObject *args,
     return 0;
 }
 
+static PyObject * 
+cimultidict_proxy_copy(MultiDictProxyObject *self)
+{
+    return _multidict_proxy_copy(self, &cimultidict_type);
+}
+
 
 PyDoc_STRVAR(CIMultDictProxy_doc,
 "Read-only proxy for CIMultiDict instance.");
 
+PyDoc_STRVAR(cimultidict_proxy_copy_doc,
+"Return copy of itself");
+
+static PyMethodDef cimultidict_proxy_methods[] = {
+    {
+        "copy",
+        (PyCFunction)cimultidict_proxy_copy,
+        METH_NOARGS,
+        cimultidict_proxy_copy_doc
+    },
+    {
+        NULL,
+        NULL
+    }   /* sentinel */
+};
 
 static PyTypeObject cimultidict_proxy_type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "multidict._multidict.CIMultiDictProxy",         /* tp_name */
     sizeof(MultiDictProxyObject),                    /* tp_basicsize */
     .tp_dealloc = (destructor)multidict_proxy_tp_dealloc,
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,
     .tp_doc = CIMultDictProxy_doc,
     .tp_traverse = (traverseproc)multidict_proxy_tp_traverse,
     .tp_clear = (inquiry)multidict_proxy_tp_clear,
     .tp_richcompare = (richcmpfunc)multidict_proxy_tp_richcompare,
     .tp_weaklistoffset = offsetof(MultiDictProxyObject, weaklist),
-    .tp_methods = multidict_proxy_methods,
+    .tp_methods = cimultidict_proxy_methods,
     .tp_base = &multidict_proxy_type,
     .tp_init = (initproc)cimultidict_proxy_tp_init,
     .tp_alloc = PyType_GenericAlloc,

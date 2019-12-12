@@ -14,6 +14,34 @@ Changelog
 
 .. towncrier release notes start
 
+4.7.1 (2019-12-12)
+==================
+
+Bugfixes
+--------
+
+- `CIMultiDictProxy.copy` return object type `multidict._multidict.CIMultiDict`
+  `#427 <https://github.com/aio-libs/multidict/issues/427>`_
+- Make `CIMultiDict` subclassable again
+  `#416 <https://github.com/aio-libs/multidict/issues/416>`_
+- Fix regression, multidict can be constructed from arbitrary iterable of pairs again.
+  `#418 <https://github.com/aio-libs/multidict/issues/418>`_
+- `CIMultiDict.add` may be called with keyword arguments
+  `#421 <https://github.com/aio-libs/multidict/issues/421>`_
+
+
+Improved Documentation
+----------------------
+
+- Mention ``MULTIDICT_NO_EXTENSIONS`` environment variable in docs.
+  `#393 <https://github.com/aio-libs/multidict/issues/393>`_
+- Document the fact that ``istr`` preserves the casing of argument untouched but uses internal lower-cased copy for keys comparison.
+  `#419 <https://github.com/aio-libs/multidict/issues/419>`_
+
+
+----
+
+
 4.7.0 (2019-12-10)
 ==================
 

@@ -55,6 +55,7 @@ mypy
 Nikolay
 param
 params
+performant
 pickable
 pre
 proxied
@@ -65,6 +66,7 @@ regex
 regexs
 repo
 runtime
+subclassable
 subclassing
 subprotocol
 subprotocols
@@ -73,6 +75,7 @@ toolbar
 toolset
 tuples
 un
+uncompiled
 upstr
 url
 urlencoded
