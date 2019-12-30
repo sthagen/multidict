@@ -416,6 +416,7 @@ fail:
     return NULL;
 }
 
+
 /******************** Base Methods ********************/
 
 static inline PyObject *
@@ -478,9 +479,7 @@ multidict_get(MultiDictObject *self, PyObject *args, PyObject *kwds)
     {
         return NULL;
     }
-    Py_INCREF(Py_None);  // incref the default if not set
     ret = _multidict_getone(self, key, _default);
-    Py_DECREF(Py_None);
     return ret;
 }
 
@@ -775,6 +774,7 @@ multidict_popone(MultiDictObject *self, PyObject *args, PyObject *kwds)
         _default != NULL)
     {
         PyErr_Clear();
+        Py_INCREF(_default);
         return _default;
     }
 
@@ -803,6 +803,7 @@ multidict_popall(MultiDictObject *self, PyObject *args, PyObject *kwds)
         _default != NULL)
     {
         PyErr_Clear();
+        Py_INCREF(_default);
         return _default;
     }
 
@@ -862,6 +863,21 @@ multidict_class_getitem(PyObject *self, PyObject *arg)
     Py_INCREF(self);
     return self;
 }
+
+
+PyDoc_STRVAR(sizeof__doc__,
+"D.__sizeof__() -> size of D in memory, in bytes");
+
+static inline PyObject *
+_multidict_sizeof(MultiDictObject *self)
+{
+    Py_ssize_t size = sizeof(MultiDictObject);
+    if (self->pairs.pairs != self->pairs.buffer) {
+        size += (Py_ssize_t)sizeof(pair_t) * self->pairs.capacity;
+    }
+    return PyLong_FromSsize_t(size);
+}
+
 
 static PySequenceMethods multidict_sequence = {
     .sq_contains = (objobjproc)multidict_sq_contains,
@@ -978,9 +994,15 @@ static PyMethodDef multidict_methods[] = {
     },
     {
         "__class_getitem__",
-        multidict_class_getitem,
+        (PyCFunction)multidict_class_getitem,
         METH_O | METH_CLASS,
         NULL
+    },
+    {
+        "__sizeof__",
+        (PyCFunction)_multidict_sizeof,
+        METH_NOARGS,
+        sizeof__doc__,
     },
     {
         NULL,
@@ -1290,7 +1312,7 @@ static PyMethodDef multidict_proxy_methods[] = {
     },
     {
         "__class_getitem__",
-        multidict_class_getitem,
+        (PyCFunction)multidict_class_getitem,
         METH_O | METH_CLASS,
         NULL
     },
