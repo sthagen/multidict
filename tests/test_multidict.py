@@ -2,6 +2,8 @@ import gc
 import operator
 import sys
 import weakref
+from collections import deque
+from collections.abc import Mapping
 from functools import reduce
 
 import pytest
@@ -262,6 +264,38 @@ class BaseMultiDictTest:
 
         assert d1 != d2
 
+    def test_eq_bad_mapping_len(self, cls):
+        class BadMapping(Mapping):
+            def __getitem__(self, key):
+                return 1
+
+            def __iter__(self):
+                yield "a"
+
+            def __len__(self):
+                1 / 0
+
+        d1 = cls(a=1)
+        d2 = BadMapping()
+        with pytest.raises(ZeroDivisionError):
+            d1 == d2
+
+    def test_eq_bad_mapping_getitem(self, cls):
+        class BadMapping(Mapping):
+            def __getitem__(self, key):
+                1 / 0
+
+            def __iter__(self):
+                yield "a"
+
+            def __len__(self):
+                return 1
+
+        d1 = cls(a=1)
+        d2 = BadMapping()
+        with pytest.raises(ZeroDivisionError):
+            d1 == d2
+
     def test_ne(self, cls):
         d = cls([("key", "value1")])
 
@@ -367,6 +401,24 @@ class BaseMultiDictTest:
         md = cls(a=1, b=2)
         it = iter(md.values())
         assert it.__length_hint__() == 2
+
+    def test_ctor_list_arg_and_kwds(self, cls):
+        arg = [("a", 1)]
+        obj = cls(arg, b=2)
+        assert list(obj.items()) == [("a", 1), ("b", 2)]
+        assert arg == [("a", 1)]
+
+    def test_ctor_tuple_arg_and_kwds(self, cls):
+        arg = (("a", 1),)
+        obj = cls(arg, b=2)
+        assert list(obj.items()) == [("a", 1), ("b", 2)]
+        assert arg == (("a", 1),)
+
+    def test_ctor_deque_arg_and_kwds(self, cls):
+        arg = deque([("a", 1)])
+        obj = cls(arg, b=2)
+        assert list(obj.items()) == [("a", 1), ("b", 2)]
+        assert arg == deque([("a", 1)])
 
 
 class TestMultiDict(BaseMultiDictTest):
