@@ -1,16 +1,19 @@
+from typing import Type
+
 import pytest
 
+from multidict import MultiMapping
 from multidict._compat import USE_CYTHON
 from multidict._multidict_py import CIMultiDict as _CIMultiDict
 from multidict._multidict_py import MultiDict as _MultiDict  # noqa: E402
 from multidict._multidict_py import getversion as _getversion
 
 if USE_CYTHON:
-    from multidict._multidict import MultiDict, CIMultiDict, getversion
+    from multidict._multidict import CIMultiDict, MultiDict, getversion
 
 
 class VersionMixin:
-    cls = NotImplemented
+    cls: Type[MultiMapping[str]]
 
     def getver(self, md):
         raise NotImplementedError
@@ -178,7 +181,7 @@ if USE_CYTHON:
 
 class TestPyMultiDict(VersionMixin):
 
-    cls = _MultiDict
+    cls = _MultiDict  # type: ignore[assignment]
 
     def getver(self, md):
         return _getversion(md)
@@ -186,7 +189,7 @@ class TestPyMultiDict(VersionMixin):
 
 class TestPyCIMultiDict(VersionMixin):
 
-    cls = _CIMultiDict
+    cls = _CIMultiDict  # type: ignore[assignment]
 
     def getver(self, md):
         return _getversion(md)

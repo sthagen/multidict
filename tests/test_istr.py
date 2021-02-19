@@ -1,5 +1,6 @@
 import gc
 import sys
+from typing import Type
 
 import pytest
 
@@ -8,6 +9,8 @@ from multidict._multidict_py import istr as _istr  # noqa: E402
 
 if USE_CYTHON:
     from multidict._multidict import istr
+else:
+    from multidict import istr
 
 
 IMPLEMENTATION = getattr(sys, "implementation")  # to suppress mypy error
@@ -15,7 +18,7 @@ IMPLEMENTATION = getattr(sys, "implementation")  # to suppress mypy error
 
 class IStrMixin:
 
-    cls = NotImplemented
+    cls = Type[istr]
 
     def test_ctor(self):
         s = self.cls()

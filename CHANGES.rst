@@ -14,17 +14,94 @@ Changelog
 
 .. towncrier release notes start
 
+5.1.0 (2020-12-03)
+==================
+
+Features
+--------
+
+- Support ``GenericAliases`` (``MultiDict[str]``) for Python 3.9+
+  `#553 <https://github.com/aio-libs/multidict/issues/553>`_
+
+
+Bugfixes
+--------
+
+- Synchronize the declared supported Python versions in ``setup.py`` with actually supported and tested ones.
+  `#552 <https://github.com/aio-libs/multidict/issues/552>`_
+
+
+----
+
+
+5.0.1 (2020-11-14)
+==================
+
+Bugfixes
+--------
+
+- Provide x86 Windows wheels
+  `#550 <https://github.com/aio-libs/multidict/issues/550>`_
+
+
+----
+
+
+5.0.0 (2020-10-12)
+==================
+
+Features
+--------
+
+- Provide wheels for ``aarch64``, ``i686``, ``ppc64le``, ``s390x`` architectures on Linux
+  as well as ``x86_64``.
+  `#500 <https://github.com/aio-libs/multidict/issues/500>`_
+- Provide wheels for Python 3.9.
+  `#534 <https://github.com/aio-libs/multidict/issues/534>`_
+
+Removal
+-------
+
+- Drop Python 3.5 support; Python 3.6 is the minimal supported Python version.
+
+Misc
+----
+
+- `#503 <https://github.com/aio-libs/multidict/issues/503>`_
+
+
+----
+
+
+4.7.6 (2020-05-15)
+==================
+
+Bugfixes
+--------
+
+- Fixed an issue with some versions of the ``wheel`` dist
+  failing because of being unable to detect the license file.
+  `#481 <https://github.com/aio-libs/multidict/issues/481>`_
+
+
+----
+
+
 4.7.5 (2020-02-21)
 ==================
 
 Bugfixes
 --------
 
-- Fixed creating and updating of MultiDict from a sequence of pairs and keyword arguments. Previously passing a list argument modified it inplace, and other sequences caused an error.
+- Fixed creating and updating of MultiDict from a sequence of pairs and keyword
+  arguments. Previously passing a list argument modified it inplace, and other sequences
+  caused an error.
   `#457 <https://github.com/aio-libs/multidict/issues/457>`_
-- Fixed comparing with mapping: an exception raised in the `__len__` method caused raising a SyntaxError.
+- Fixed comparing with mapping: an exception raised in the
+  :py:func:`~object.__len__` method caused raising a SyntaxError.
   `#459 <https://github.com/aio-libs/multidict/issues/459>`_
-- Fixed comparing with mapping: all exceptions raised in the `__getitem__` method were silenced.
+- Fixed comparing with mapping: all exceptions raised in the
+  :py:func:`~object.__getitem__` method were silenced.
   `#460 <https://github.com/aio-libs/multidict/issues/460>`_
 
 
@@ -37,7 +114,8 @@ Bugfixes
 Bugfixes
 --------
 
-- ``MultiDict.iter`` fix memory leak when used iterator over `multidict` instance.
+- ``MultiDict.iter`` fix memory leak when used iterator over
+  :py:mod:`multidict` instance.
   `#452 <https://github.com/aio-libs/multidict/issues/452>`_
 
 
@@ -81,7 +159,7 @@ Bugfixes
 
 - Fix crashing when multidict is used pyinstaller
   `#432 <https://github.com/aio-libs/multidict/issues/432>`_
-- Fix typing for `CIMultiDict.copy`
+- Fix typing for :py:meth:`CIMultiDict.copy`
   `#434 <https://github.com/aio-libs/multidict/issues/434>`_
 - Fix memory leak in ``MultiDict.copy()``
   `#443 <https://github.com/aio-libs/multidict/issues/443>`_
@@ -96,13 +174,14 @@ Bugfixes
 Bugfixes
 --------
 
-- `CIMultiDictProxy.copy` return object type `multidict._multidict.CIMultiDict`
+- :py:meth:`CIMultiDictProxy.copy` return object type
+  :py:class:`multidict._multidict.CIMultiDict`
   `#427 <https://github.com/aio-libs/multidict/issues/427>`_
-- Make `CIMultiDict` subclassable again
+- Make :py:class:`CIMultiDict` subclassable again
   `#416 <https://github.com/aio-libs/multidict/issues/416>`_
 - Fix regression, multidict can be constructed from arbitrary iterable of pairs again.
   `#418 <https://github.com/aio-libs/multidict/issues/418>`_
-- `CIMultiDict.add` may be called with keyword arguments
+- :py:meth:`CIMultiDict.add` may be called with keyword arguments
   `#421 <https://github.com/aio-libs/multidict/issues/421>`_
 
 

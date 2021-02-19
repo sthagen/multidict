@@ -27,7 +27,9 @@ if platform.system() != "Windows":
 
 extensions = [
     Extension(
-        "multidict._multidict", ["multidict/_multidict.c"], extra_compile_args=CFLAGS,
+        "multidict._multidict",
+        ["multidict/_multidict.c"],
+        extra_compile_args=CFLAGS,
     ),
 ]
 
@@ -59,10 +61,10 @@ args = dict(
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Development Status :: 5 - Production/Stable",
     ],
     author="Andrew Svetlov",
@@ -78,14 +80,14 @@ args = dict(
     },
     license="Apache 2",
     packages=["multidict"],
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     include_package_data=True,
 )
 
 if not NO_EXTENSIONS:
-    print("**********************")
-    print("* Accellerated build *")
-    print("**********************")
+    print("*********************")
+    print("* Accelerated build *")
+    print("*********************")
     setup(ext_modules=extensions, **args)
 else:
     print("*********************")
